@@ -11,7 +11,7 @@ TOKEN = os.getenv('TOKEN')
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 fake_cache = {}
 current_glazer = None
@@ -49,6 +49,17 @@ async def glaze(ctx):
 
     await ctx.send(message)
 
+@bot.command()
+async def roast(ctx):
+
+    await ctx.message.delete()
+
+    previous_message = ""
+    async for message in ctx.channel.history(limit=1, before=ctx.message):
+        previous_message = message.content
+    message = comment("roast", fake_cache[current_glazer.id], previous_message)
+
+    await ctx.send(message)
 
 
 
