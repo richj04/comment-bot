@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from openrouter import mimicPrompt, comment
+from mongoDB import checkUserExist, createUser, updateUserPrompt, checkValidTokens, useToken
 import os
 from dotenv import load_dotenv
 
@@ -17,29 +18,37 @@ fake_cache = {}
 current_glazer = None
 
 @bot.command()
-async def mimic(ctx, username):
+async def mimic(ctx, target_username):
+    print("mimic function run!")
+    #if user doesn't exist, create user
+    if not checkUserExist(ctx.author.id):
+        print("creating user ID")
+        createUser(ctx.author.id, None)
+
+    #check targetUser exist, if doesn't exist, check if they exist in server then creates userInstance   
+    target_member = ctx.guild.get_member_named(target_username)
+    print(target_member)
+    if target_member == None:
+            print("target member is none")
+            await ctx.send("User Not Found!")
+            return
+    target_id = target_member.id
+    if not checkUserExist(target_id):
+            if checkValidTokens(ctx.author.id):
+                prompt = clonePersonality(ctx, target_member) 
+                createUser(target_id, prompt)
+                useToken(ctx.author.id)
+            else:
+                await ctx.send("You are out of tokens, try again tomorrow.")
+                return
+    
     global current_glazer
-    member = ctx.guild.get_member_named(username)
-    if member == None:
-        await ctx.send("User Not Found!")
-        return
-    
-    messages = []
-    async for message in ctx.channel.history(limit=200, before=ctx.message):
-        if message.author == member:
-            try:
-                messages.append(message.content)
-            except UnicodeEncodeError:
-                print("message has special characters")
-    
-    fake_cache[member.id] = mimicPrompt(messages)
-    current_glazer = member
+    current_glazer = target_member
     await ctx.guild.me.edit(nick=current_glazer.display_name)
     await ctx.send("successfully copied user identity!")
 
 @bot.command()
 async def glaze(ctx):
-
     await ctx.message.delete()
 
     previous_message = ""
@@ -62,7 +71,16 @@ async def roast(ctx):
     await ctx.send(message)
 
 
-
+async def clonePersonality(ctx, target_member):
+    messages = []
+    async for message in ctx.channel.history(limit=200, before=ctx.message):
+        if message.author == target_member:
+            try:
+                messages.append(message.content)
+            except UnicodeEncodeError:
+                print("message has special characters")
+    prompt = mimicPrompt(messages)
+    return prompt
 
 
 

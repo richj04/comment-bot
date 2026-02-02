@@ -11,10 +11,13 @@ uri = f'{URI}'
 client = MongoClient(
     uri,
     tls=True,
-    tlsCAFile=certifi.where()
+    tlsAllowInvalidCertificates=True
+    #tlsCAFile=certifi.where()
 )
 db = client["userdata"]
 user_prompts = db["user_prompts"]
+
+print("database is on!")
 
 def checkUserExist( userID ):
     user = user_prompts.find_one({"userid": userID})
