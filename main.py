@@ -18,7 +18,7 @@ fake_cache = {}
 current_glazer = None
 
 @bot.command()
-async def mimic(ctx, target_username):
+async def mimic(ctx, target_username, overwrite=None):
     print("mimic function run!")
     #if user doesn't exist, create user
     if not checkUserExist(ctx.author.id):
@@ -35,17 +35,28 @@ async def mimic(ctx, target_username):
     target_id = target_member.id
     if not checkUserExist(target_id):
             if checkValidTokens(ctx.author.id):
-                prompt = clonePersonality(ctx, target_member) 
+                prompt = await clonePersonality(ctx, target_member) 
                 createUser(target_id, prompt)
                 useToken(ctx.author.id)
+                await ctx.send("successfully copied user identity!")
             else:
+                await ctx.send("You are out of tokens, try again tomorrow.")
+                return
+    elif( overwrite == 'overwrite'):
+        if checkValidTokens(ctx.author.id):
+                prompt = await clonePersonality(ctx, target_member) 
+                updateUserPrompt(target_id, prompt)
+                useToken(ctx.author.id)
+                await ctx.send("successfully overwrote user identity!")
+        else:
                 await ctx.send("You are out of tokens, try again tomorrow.")
                 return
     
     global current_glazer
     current_glazer = target_member
     await ctx.guild.me.edit(nick=current_glazer.display_name)
-    await ctx.send("successfully copied user identity!")
+    await ctx.send("User Selected!")
+
 
 @bot.command()
 async def glaze(ctx):
@@ -73,8 +84,8 @@ async def roast(ctx):
 
 async def clonePersonality(ctx, target_member):
     messages = []
-    async for message in ctx.channel.history(limit=200, before=ctx.message):
-        if message.author == target_member:
+    async for message in ctx.channel.history(limit=500, before=ctx.message):
+        if message.author == target_member and len(message.content) < 55:
             try:
                 messages.append(message.content)
             except UnicodeEncodeError:

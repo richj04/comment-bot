@@ -47,9 +47,14 @@ def checkValidTokens ( userID ):
     return False
 
 def useToken ( userID ):
-    user_prompts.update_one(
-        {"userid: userID"},
+    result = user_prompts.update_one(
+        {"userid": userID},
         {"$inc": {"tokens": -1}}
+    )
+    print(
+        "useToken -> userid:", userID,
+        "matched:", result.matched_count,
+        "modified:", result.modified_count
     )
 
 
