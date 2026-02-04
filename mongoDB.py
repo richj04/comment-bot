@@ -11,8 +11,7 @@ uri = f'{URI}'
 client = MongoClient(
     uri,
     tls=True,
-    tlsAllowInvalidCertificates=True
-    #tlsCAFile=certifi.where()
+    tlsCAFile=certifi.where()
 )
 db = client["userdata"]
 user_prompts = db["user_prompts"]

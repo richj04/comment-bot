@@ -109,19 +109,27 @@ def comment(type, prompt, previous_message):
         {
             "role": "user",
             "content": 
-                f"""You are mimicking someone's writing style to comment on a message.
+            f"""MESSAGE YOU ARE REACTING TO:
+                "{previous_message}"
 
-                STYLE TO MIMIC:
+                TASK: {mode[type]} what they said in the message above.
+
+                STYLE TO USE:
                 {prompt}
 
-                TASK:
-                {mode[type]}
+                REQUIREMENTS:
+                - Your reaction MUST be directly relevant to the specific content of their message
+                - Do NOT use @mentions or reference usernames
+                - If the style includes @mentions, ignore that pattern
+                - You can either:
+                a) Use one of the example phrases from the style and adapt it to fit their message, OR
+                b) Create a new phrase that matches their tone, vocabulary, and patterns
+                - Keep it short (5-10 words maximum)
+                - Output ONE phrase only - do not chain multiple reactions together
 
-                MESSAGE TO RESPOND TO:
-                {previous_message}
+                Think: "What would this person's immediate, gut reaction be to what was just said?"
 
-                Write your response in the exact style described above. Match their tone, vocabulary, sentence structure, and personality perfectly. 
-                Your response should sound like something they would actually say, and be the length of a single phrase, with a typical response length expected of their linguistics"""
+                One relevant phrase:"""
         }
         ]
     })
