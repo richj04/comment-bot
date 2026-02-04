@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from openrouter import mimicPrompt, comment
-from mongoDB import checkUserExist, createUser, updateUserPrompt, checkValidTokens, useToken
+from mongoDB import checkUserExist, createUser, updateUserPrompt, checkValidTokens, useToken, getPrompt, selectUser, getSelectedUser
 import os
 from dotenv import load_dotenv
 
@@ -15,7 +15,6 @@ intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 fake_cache = {}
-current_glazer = None
 
 @bot.command()
 async def mimic(ctx, target_username, overwrite=None):
@@ -36,7 +35,7 @@ async def mimic(ctx, target_username, overwrite=None):
     if not checkUserExist(target_id):
             if checkValidTokens(ctx.author.id):
                 prompt = await clonePersonality(ctx, target_member) 
-                createUser(target_id, prompt)
+                createUser(target_id, prompt, target_username)
                 useToken(ctx.author.id)
                 await ctx.send("successfully copied user identity!")
             else:
@@ -52,34 +51,53 @@ async def mimic(ctx, target_username, overwrite=None):
                 await ctx.send("You are out of tokens, try again tomorrow.")
                 return
     
-    global current_glazer
-    current_glazer = target_member
-    await ctx.guild.me.edit(nick=current_glazer.display_name)
+    selectUser(ctx.guild.id, target_id)
+    await ctx.guild.me.edit(nick=f'I am {target_member.display_name}')
     await ctx.send("User Selected!")
 
 
 @bot.command()
 async def glaze(ctx):
-    await ctx.message.delete()
+    if checkValidTokens(ctx.author.id):
+        await ctx.message.delete()
+        previous_message = ""
+        async for message in ctx.channel.history(limit=1, before=ctx.message):
+            previous_message = message.content
 
-    previous_message = ""
-    async for message in ctx.channel.history(limit=1, before=ctx.message):
-        previous_message = message.content
-    message = comment("glaze", fake_cache[current_glazer.id], previous_message)
+        selectedUserID = getSelectedUser(ctx.guild.id)
+        if selectedUserID== None:
+            await ctx.send("select a user!")
+            return
 
-    await ctx.send(message)
+        prompt = getPrompt(selectedUserID)
+        message = comment("glaze", prompt, previous_message)
+        await ctx.send(message)
+        useToken(ctx.author.id)
+    else:
+        await ctx.send("You are out of tokens, try again tomorrow.")
+        return 
 
 @bot.command()
 async def roast(ctx):
+    if checkValidTokens(ctx.author.id):
+        await ctx.message.delete()
+        previous_message = ""
+        async for message in ctx.channel.history(limit=1, before=ctx.message):
+            previous_message = message.content
 
-    await ctx.message.delete()
+        selectedUserID = getSelectedUser(ctx.guild.id)
+        if selectedUserID == None:
+            await ctx.send("select a user!")
+            return
 
-    previous_message = ""
-    async for message in ctx.channel.history(limit=1, before=ctx.message):
-        previous_message = message.content
-    message = comment("roast", fake_cache[current_glazer.id], previous_message)
-
-    await ctx.send(message)
+        prompt = getPrompt(selectedUserID)
+        message = comment("roast", prompt, previous_message)
+        await ctx.send(message)
+        useToken(ctx.author.id)
+    else:
+        await ctx.send("You are out of tokens, try again tomorrow.")
+        return 
+    
 
 
 async def clonePersonality(ctx, target_member):

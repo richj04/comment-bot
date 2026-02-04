@@ -16,20 +16,39 @@ client = MongoClient(
 )
 db = client["userdata"]
 user_prompts = db["user_prompts"]
-
+selected_user = db["selected_user"]
 print("database is on!")
+
+def selectUser( guildID, userID):
+    selected_user.update_one(
+        {"guildid": guildID},
+        {"$set":{"selecteduserid": userID}},
+        upsert=True
+    )
+
+def getSelectedUser ( guildID ):
+    guild = selected_user.find_one({"guildid":guildID})
+    if guild is None:
+        return None
+    return guild.get("selecteduserid")
+
 
 def checkUserExist( userID ):
     user = user_prompts.find_one({"userid": userID})
     if user:
         return True
     return False
+
+def getPrompt (userID):
+    user = user_prompts.find_one({"userid": userID})
+    return user["prompt"]
     
-def createUser( userID, userPrompt ):
+def createUser( userID, userPrompt, userName ):
     user_prompts.insert_one({
         "userid": userID,
         "prompt": userPrompt,
-        "tokens": 8
+        "tokens": 8,
+        "username": userName
     })
 
 def updateUserPrompt ( userID, userPrompt ):

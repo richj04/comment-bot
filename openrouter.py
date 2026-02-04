@@ -121,7 +121,7 @@ def comment(type, prompt, previous_message):
                 {previous_message}
 
                 Write your response in the exact style described above. Match their tone, vocabulary, sentence structure, and personality perfectly. 
-                Your response should sound like something they would actually say, and be the length of one phrase"""
+                Your response should sound like something they would actually say, and be the length of a single phrase, with a typical response length expected of their linguistics"""
         }
         ]
     })
