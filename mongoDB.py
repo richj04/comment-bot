@@ -3,6 +3,8 @@ from pymongo.server_api import ServerApi
 import os
 from dotenv import load_dotenv
 import certifi
+from datetime import datetime, timezone
+
 
 load_dotenv()  # Load .env file
 URI = os.getenv('URI')
@@ -59,9 +61,29 @@ def updateUserPrompt ( userID, userPrompt ):
 
 def checkValidTokens ( userID ):
     doc = user_prompts.find_one({"userid": userID})
-    tokens = doc["tokens"]
-    if tokens > 0:
+    
+    if not doc:
+        return False
+
+    today = datetime.now(timezone.utc).date()
+    last_reset = doc.get("last_reset_date")
+    
+    # If last_reset doesn't exist or is a different day, reset tokens
+    if not last_reset or last_reset != today.isoformat():
+        user_prompts.update_one(
+            {"userid": userID},
+            {
+                "$set": {
+                    "tokens": 8,
+                    "last_reset_date": today.isoformat()
+                }
+            }
+        )
+        return True  
+    
+    if doc["tokens"] > 0:
         return True
+    
     return False
 
 def useToken ( userID ):

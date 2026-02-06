@@ -1,0 +1,4 @@
+discord.py==2.6.4
+pymongo==4.11.0
+python-dotenv==1.0.0
+requests==2.31.0
